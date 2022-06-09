@@ -44,6 +44,10 @@ app.layout = html.Div(children=[
         html.Button('Ordenar Alfabeticamente o Grafico', id='order_g1', n_clicks=0),
         html.Button('Resetar Grafico', id='reset_g1', n_clicks=0),
     ], id="botoes_g1"),
+    html.Div([
+        dcc.Dropdown(opcoes, value="Todos os Estados", id='lista_estados_g1_multi', multi=True),
+    ], style={"width": "600px", "margin": "1em 0 0 5em "}
+    ),
     dcc.Graph(
         id='Pessoas_elegiveis_estado',
         figure=fig1
@@ -77,25 +81,28 @@ app.layout = html.Div(children=[
     Input('lista_estados_g1', 'value'),
     Input('order_g1', 'n_clicks'),
     Input('reset_g1', 'n_clicks'),
+    Input('lista_estados_g1_multi', 'value')
 )
-def update_graph1(value,order_g1,reset_g1):
+def update_graph1(value, order_g1, reset_g1, lista_estados_g1_multi):
     triggered_id = ctx.triggered_id
-    print(triggered_id)
-    print(value)
     if triggered_id == 'order_g1':
         return displayClick()
     elif triggered_id == 'reset_g1':
         return resetDisplayG1()
+    elif triggered_id == 'lista_estados_g1_multi':
+        return compareCom(lista_estados_g1_multi)
     else:
-        return update_output(value)
+        return update_estado(value)
 
 
 
-def update_output(value):
+def update_estado(value):
     if (value == "Todos os Estados"):
         fig1 = px.bar(df, x="UF", y="Pessoas Elegiveis", barmode="group")
     else:
+        print(value)
         update_dados = df.loc[df["UF"]==value, :]
+        print(update_dados)
         fig1 = px.bar(update_dados, x="UF", y="Pessoas Elegiveis", barmode="group")
     return fig1
 
@@ -106,6 +113,10 @@ def resetDisplayG1():
     fig1 = px.bar(df, x="UF", y="Pessoas Elegiveis", barmode="group")
     return fig1
 
+def compareCom(dados):
+    update_dados = df.loc[df["UF"].isin(dados)]
+    fig1 = px.bar(update_dados, x="UF", y="Pessoas Elegiveis", barmode="group")
+    return fig1
 
 
 if __name__ == '__main__':
