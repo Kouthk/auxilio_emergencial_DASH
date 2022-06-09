@@ -1,7 +1,7 @@
 # Run this app with `python app.py` and
 # visit http://127.0.0.1:8050/ in your web browser.
 
-from dash import Dash, html, dcc, Input, Output
+from dash import Dash, html, dcc, Input, Output, ctx
 import plotly.express as px
 import pandas as pd
 
@@ -13,17 +13,16 @@ df = pd.read_csv("dataset_auxilioEmergencial_2021.csv")
 
 #Aqui cria o grafico
 fig1 = px.bar(df, x="UF", y="Pessoas Elegiveis", barmode="group")
+
 opcoes = list(df['UF'].unique())
 opcoes.append("Todos os Estados")
-
+opcoes.sort()
 #Grafico2
 fig2= px.pie(df, values="Valor a Ser Repassado", names="UF", title="Valor repassado por estado")
 
-
 #Grafico3
-fig3 = px.imshow(df, x="Unidade Territorial", y="Pessoas ELegiveis a receber R$150")
-
-
+fig3 = px.bar(df, x="UF", y="Pessoas ELegiveis a receber R$150")
+fig3.update_xaxes(categoryorder='category ascending')
 
 app.layout = html.Div(children=[
     html.H1(children='Auxilio Emergencial - 2021'),
@@ -31,31 +30,36 @@ app.layout = html.Div(children=[
         Análise de dados com dataset referente ao Auxílio Emergencial no ano de  2021    
         '''),
     html.Br(),
+    #Primeiro Grafico aqui
     html.H3(
             children="Grafico de Barras: Pessoas Elegiveis por estado",
             style={ "margin": "1em 0 0 4.2em "}
     ),
     html.Div([
-            dcc.Dropdown(opcoes, value="Todos os Estados", id='lista_estados_g2'),
+            dcc.Dropdown(opcoes, value="Todos os Estados", id='lista_estados_g1'),
         ], style={"width":"200px", "margin":"1em 0 0 5em "}
 
     ),
+    html.Div([
+        html.Button('Ordenar Alfabeticamente o Grafico', id='order_g1', n_clicks=0),
+        html.Button('Resetar Grafico', id='reset_g1', n_clicks=0),
+    ], id="botoes_g1"),
     dcc.Graph(
         id='Pessoas_elegiveis_estado',
         figure=fig1
     ),
+    # Segundo Grafico aqui
     html.H3(children="Grafico de Pizza: Valor Elegivel por estado",
             style={ "margin": "1em 0 0 4.2em "}),
     html.Div([
         dcc.Dropdown(opcoes, value="Todos os Estados", id='lista_estados'),
     ], style={"width": "200px", "margin": "1em 0 0 5em "}
     ),
-    html.H3(children="Grafico de Sccater: Valor Elegivel por estado",
-            style={ "margin": "1em 0 0 4.2em "}),
     dcc.Graph(
         id='valor_repassado_estados1',
         figure=fig2
     ),
+    #Terceiro Grafico aqui
     html.H3(children="Grafico de a decidir: Valor Elegivel por estado",
             style={ "margin": "1em 0 0 4.2em "}),
     html.Div([
@@ -70,8 +74,23 @@ app.layout = html.Div(children=[
 
 @app.callback(
     Output('Pessoas_elegiveis_estado', 'figure'),
-    Input('lista_estados', 'value')
+    Input('lista_estados_g1', 'value'),
+    Input('order_g1', 'n_clicks'),
+    Input('reset_g1', 'n_clicks'),
 )
+def update_graph1(value,order_g1,reset_g1):
+    triggered_id = ctx.triggered_id
+    print(triggered_id)
+    print(value)
+    if triggered_id == 'order_g1':
+        return displayClick()
+    elif triggered_id == 'reset_g1':
+        return resetDisplayG1()
+    else:
+        return update_output(value)
+
+
+
 def update_output(value):
     if (value == "Todos os Estados"):
         fig1 = px.bar(df, x="UF", y="Pessoas Elegiveis", barmode="group")
@@ -79,6 +98,14 @@ def update_output(value):
         update_dados = df.loc[df["UF"]==value, :]
         fig1 = px.bar(update_dados, x="UF", y="Pessoas Elegiveis", barmode="group")
     return fig1
+
+def displayClick():
+    return fig1.update_xaxes(categoryorder='category ascending')
+
+def resetDisplayG1():
+    fig1 = px.bar(df, x="UF", y="Pessoas Elegiveis", barmode="group")
+    return fig1
+
 
 
 if __name__ == '__main__':
