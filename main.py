@@ -21,7 +21,7 @@ opcoes.sort()
 fig2= px.pie(df, values="Valor a Ser Repassado", names="UF", title="Valor repassado por estado")
 
 #Grafico3
-fig3 = px.bar(df, x="UF", y="Pessoas ELegiveis a receber R$150")
+fig3 = px.scatter(df, x="UF", y="Pessoas ELegiveis a receber R$150")
 fig3.update_xaxes(categoryorder='category ascending')
 
 app.layout = html.Div(children=[
